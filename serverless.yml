@@ -1,0 +1,54 @@
+service:
+  name: sls-lambda
+
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb: PutItem
+        - dynamodb: DescribeTable
+        - dynamodb: Query
+        - dynamodb: Scan
+        - dynamodb: GetItem
+        - dynamodb: PutItem
+        - dynamodb: UpdateItem
+        - dynamodb: DeleteItem
+        Resources: 'arn:aws:dynamodb:#{AWS:Region}:AcountId:rable/mywebsite'
+    
+  
+resources:
+  Resources:
+    mywebsite:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: mywebsite
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH 
+  
+functions:
+  hello:
+    handler: src/handlers/hello.handler
+    events:
+      - http:
+          method: GET
+          path: /hello
+  postfeedback:
+    handler: src/handlers/post.handler
+    events:
+      - http:
+          method: POST
+          path: /feedback
